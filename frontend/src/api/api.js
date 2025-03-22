@@ -31,12 +31,24 @@ export const authService = {
     if (response.data.access) {
       localStorage.setItem('token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
+      localStorage.setItem('username', username);
     }
+    return response.data;
+  },
+  register: async (username, email, password, currency) => {
+    const response = await axios.post(`${API_URL}/register/`, { 
+      username, 
+      email, 
+      password,
+      password2: password,
+      currency
+    });
     return response.data;
   },
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('username');
   },
   refreshToken: async () => {
     const refresh = localStorage.getItem('refresh_token');
@@ -48,6 +60,12 @@ export const authService = {
       localStorage.setItem('token', response.data.access);
     }
     return response.data;
+  },
+  getCurrentUser: () => {
+    return localStorage.getItem('username');
+  },
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
   }
 };
 
@@ -86,10 +104,72 @@ export const transactionService = {
     return response.data;
   },
   exportCSV: async () => {
-    window.open(`${API_URL}/transactions/export_csv/`, '_blank');
+    try {
+      console.log('Starting CSV export...');
+      
+      // Use the api instance which already has the auth token
+      const response = await api.get('/transactions/export_csv/', { 
+        responseType: 'blob',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': '*/*'
+        }
+      });
+      
+      console.log('CSV response received:', response.status);
+      
+      // Create file from response
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'transactions.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      console.log('CSV export completed');
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to export CSV file. Please try again.');
+    }
   },
   exportExcel: async () => {
-    window.open(`${API_URL}/transactions/export_excel/`, '_blank');
+    try {
+      console.log('Starting Excel export with authenticated request...');
+      
+      // Use the api instance which already has auth headers properly set
+      const response = await api.get('/transactions/export_excel/', {
+        responseType: 'blob',
+        headers: {
+          // Override content type for file download
+          'Content-Type': 'application/json',
+          'Accept': '*/*'
+        }
+      });
+      
+      console.log('Response received:', response.status);
+      
+      // Create file from the response
+      const contentType = 'application/vnd.ms-excel';
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create and trigger download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'transactions.xls');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      console.log('Excel export completed');
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      alert('Failed to export Excel file. Please try again.');
+    }
   }
 };
 

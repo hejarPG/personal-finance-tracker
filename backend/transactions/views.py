@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from rest_framework import viewsets, status, permissions, filters
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.db.models import Sum, Count, Q
@@ -10,6 +10,9 @@ import xlwt
 from datetime import datetime, timedelta
 from .models import Category, Transaction
 from .serializers import CategorySerializer, TransactionSerializer
+from rest_framework_simplejwt.tokens import AccessToken
+from django.contrib.auth.models import User
+from rest_framework.exceptions import AuthenticationFailed
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -161,8 +164,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """
         transactions = self.get_queryset()
         
+        # Set proper content type and headers
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="transactions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+        response['Cache-Control'] = 'no-cache'
         
         writer = csv.writer(response)
         writer.writerow(['Title', 'Description', 'Category', 'Amount', 'Date'])
@@ -186,9 +191,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """
         transactions = self.get_queryset()
         
-        response = HttpResponse(content_type='application/ms-excel')
+        # Set correct content type for Excel files
+        response = HttpResponse(
+            content_type='application/vnd.ms-excel'
+        )
         response['Content-Disposition'] = f'attachment; filename="transactions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xls"'
         
+        # Set cache control to prevent caching issues
+        response['Cache-Control'] = 'no-cache'
+        
+        # Generate Excel file
         wb = xlwt.Workbook(encoding='utf-8')
         ws = wb.add_sheet('Transactions')
         
@@ -215,5 +227,67 @@ class TransactionViewSet(viewsets.ModelViewSet):
             ws.write(row_num, 3, float(transaction.amount), font_style)
             ws.write(row_num, 4, transaction.created_at.strftime('%Y-%m-%d %H:%M'), font_style)
         
+        # Save to response
         wb.save(response)
         return response
+    
+    @action(detail=False, methods=['get'])
+    def export_excel_direct(self, request):
+        """
+        Export user's transactions as Excel with token in query parameter
+        """
+        # Try to get token from query parameters
+        token_param = request.query_params.get('token')
+        
+        # If token is provided in query parameter
+        if token_param:
+            try:
+                # Decode the token to get the user
+                access_token = AccessToken(token_param)
+                user_id = access_token['user_id']
+                user = User.objects.get(id=user_id)
+                
+                # Use the user to filter transactions
+                transactions = Transaction.objects.filter(user=user)
+                
+                # Generate Excel file
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = f'attachment; filename="transactions_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+                
+                wb = xlwt.Workbook(encoding='utf-8')
+                ws = wb.add_sheet('Transactions')
+                
+                # Sheet header
+                row_num = 0
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+                
+                columns = ['Title', 'Description', 'Category', 'Amount', 'Date']
+                
+                for col_num, column_title in enumerate(columns):
+                    ws.write(row_num, col_num, column_title, font_style)
+                
+                # Sheet body
+                font_style = xlwt.XFStyle()
+                
+                for transaction in transactions:
+                    row_num += 1
+                    category_name = transaction.category.name if transaction.category else 'Uncategorized'
+                    
+                    ws.write(row_num, 0, transaction.title, font_style)
+                    ws.write(row_num, 1, transaction.description or '', font_style)
+                    ws.write(row_num, 2, category_name, font_style)
+                    ws.write(row_num, 3, float(transaction.amount), font_style)
+                    ws.write(row_num, 4, transaction.created_at.strftime('%Y-%m-%d %H:%M'), font_style)
+                
+                wb.save(response)
+                return response
+                
+            except Exception as e:
+                return Response(
+                    {'detail': f'Invalid token or user not found: {str(e)}'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        
+        # If no token in query param, use default authentication
+        return self.export_excel(request)

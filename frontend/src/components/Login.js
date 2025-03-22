@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
@@ -11,7 +11,6 @@ const Login = () => {
     password: ''
   });
   const [error, setError] = useState('');
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -21,18 +20,12 @@ const Login = () => {
     });
   };
   
-  const handleCurrencyChange = (e) => {
-    setSelectedCurrency(e.target.value);
-  };
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
     try {
       await login(credentials.username, credentials.password);
-      // Save selected currency in localStorage
-      localStorage.setItem('currency', selectedCurrency);
       // Redirect to dashboard
       navigate('/dashboard');
     } catch (err) {
@@ -95,27 +88,6 @@ const Login = () => {
           </div>
           
           <div>
-            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">
-              Preferred Currency
-            </label>
-            <select
-              id="currency"
-              name="currency"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-              value={selectedCurrency}
-              onChange={handleCurrencyChange}
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="JPY">JPY (¥)</option>
-              <option value="CAD">CAD (C$)</option>
-              <option value="AUD">AUD (A$)</option>
-              <option value="INR">INR (₹)</option>
-            </select>
-          </div>
-          
-          <div>
             <button
               type="submit"
               disabled={loading}
@@ -123,6 +95,15 @@ const Login = () => {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Sign up now
+              </Link>
+            </p>
           </div>
         </form>
       </div>

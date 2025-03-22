@@ -17,10 +17,9 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = () => {
       const token = localStorage.getItem('token');
       if (token) {
+        const username = localStorage.getItem('username');
         setIsAuthenticated(true);
-        // We don't have an endpoint to get user details yet, 
-        // so we'll just set a placeholder user object
-        setUser({ username: 'User' });
+        setUser({ username: username || 'User' });
       }
       setLoading(false);
     };
@@ -38,11 +37,30 @@ export const AuthProvider = ({ children }) => {
       
       setIsAuthenticated(true);
       setUser({ username });
+      localStorage.setItem('username', username);
       
       return data;
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid credentials');
       console.error('Login error:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Register function
+  const register = async (username, email, password, currency) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await authService.register(username, email, password, currency);
+      
+      return data;
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Registration failed');
+      console.error('Registration error:', err);
       throw err;
     } finally {
       setLoading(false);
@@ -63,6 +81,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     error,
     login,
+    register,
     logout
   };
 
