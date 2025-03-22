@@ -1,6 +1,6 @@
 # Personal Finance Tracker
 
-A modern personal finance tracking application built entirely with AI assistance using Cursor IDE and large language models (LLMs).
+A modern personal finance tracking application built with Django and React for efficient financial management.
 
 ## 🤖 About the Development
 
@@ -12,33 +12,33 @@ This project is unique because it was developed **entirely through collaboration
 
 ## 🚀 Features
 
+- Secure user authentication with JWT
 - Track income and expenses
-- Categorize transactions
+- Categorize transactions with custom categories and colors
 - Visualize spending patterns with interactive charts
-- Set and monitor budget goals
-- Secure user authentication
+- Export transactions to CSV or Excel formats
 - Responsive design for all devices
 
 ## 💻 Tech Stack
 
 ### Frontend
 - React.js
-- Material UI components
 - Tailwind CSS for styling
 - Chart visualization using MUI X-Charts
+- Lucide React for icons
 
 ### Backend
-- Node.js API server
-- Express.js framework
-- MongoDB database
+- Django REST Framework
+- SQLite database (easily configurable to PostgreSQL, MySQL)
 - JWT authentication
+- Django ORM for data modeling
 
 ## 🏁 Getting Started
 
 ### Prerequisites
-- Node.js (v14.x or higher)
+- Python 3.8+ for backend
+- Node.js (v14.x or higher) for frontend
 - npm or yarn package manager
-- MongoDB (local or Atlas connection)
 
 ### Installation
 
@@ -48,50 +48,57 @@ git clone https://github.com/yourusername/personal-finance-tracker.git
 cd personal-finance-tracker
 ```
 
-2. Install backend dependencies
+2. Set up and start the backend server
 ```bash
 cd backend
-npm install
+# Create a virtual environment (recommended)
+python -m venv venv
+# Activate the virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Apply migrations
+python manage.py migrate
+
+# Create a superuser for admin access
+python manage.py createsuperuser
+
+# Start the development server
+python manage.py runserver
 ```
 
-3. Install frontend dependencies
-```bash
-cd ../frontend
-npm install
-```
-
-4. Start the development servers
-
-Backend:
-```bash
-cd backend
-npm run dev
-```
-
-Frontend:
+3. Set up and start the frontend
 ```bash
 cd frontend
+npm install
 npm start
 ```
 
-5. Open your browser and navigate to `http://localhost:3000`
+4. Open your browser and navigate to `http://localhost:3000`
 
 ## 📝 Project Structure
 
 ```
 personal-finance-tracker/
-├── backend/             # Node.js API server
-│   ├── controllers/     # Request handlers
-│   ├── models/          # Data models
-│   ├── routes/          # API routes
-│   └── server.js        # Entry point
-├── frontend/            # React application
-│   ├── public/          # Static files
-│   └── src/             # React components and logic
-│       ├── components/  # Reusable UI components
-│       ├── pages/       # Application pages
-│       └── utils/       # Helper functions
-└── README.md            # Project documentation
+├── backend/                # Django backend
+│   ├── transactions/       # Main app for financial data
+│   │   ├── models.py       # Data models (Transaction, Category)
+│   │   ├── serializers.py  # API serializers
+│   │   ├── views.py        # API views and endpoints
+│   │   └── urls.py         # URL routing
+│   └── users/              # User authentication app
+├── frontend/               # React application
+│   ├── public/             # Static files
+│   └── src/                # React components and logic
+│       ├── components/     # UI components
+│       ├── context/        # React context providers
+│       └── api/            # API service layer
+└── README.md               # Project documentation
 ```
 
 ## 🤝 Contributing
@@ -106,12 +113,22 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 ### Dashboard
 ![Dashboard Overview](assets/images/dashboard-overview.png)
 
+### Transaction Management
+![Adding Transactions](assets/images/add-transaction.png)
+![Transaction History](assets/images/transaction-list.png)
+
+### Category Management
+![Category Management](assets/images/category-management.png)
+
+### Analytics
+![Financial Analytics](assets/images/charts-analytics.png)
+
 ## 🔮 Future Enhancements
 
-- Mobile applications (React Native)
+- Mobile applications
 - Recurring transaction management
-- Data export capabilities
 - Financial goal tracking
+- Budget planning
 - Investment portfolio tracking
 
 ---
