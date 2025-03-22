@@ -100,11 +100,11 @@ Contributions, issues, and feature requests are welcome! Feel free to check the 
 
 ## 📸 Screenshots
 
-*Coming soon*
+### Login Screen
+![Login Screen](assets/images/login-screen.png)
 
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+### Dashboard
+![Dashboard Overview](assets/images/dashboard-overview.png)
 
 ## 🔮 Future Enhancements
 
